@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>Eldrago Fee Calculator</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1220;
+      --panel: #121d2e;
+      --panel-2: #18263a;
+      --text: #f4f7fb;
+      --muted: #9aabc0;
+      --accent: #55d6a4;
+      --accent-dark: #173f37;
+      --border: #29394e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 32px 16px;
+      display: grid; place-items: center;
+      background: radial-gradient(ellipse at top, #1a2b42 0%, var(--bg) 58%);
+      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+    }
+    .wrap { width: min(100%, 490px); }
+    .brand { text-align: center; margin-bottom: 22px; }
+    .logo {
+      width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 15px;
+      display: grid; place-items: center; background: var(--accent-dark);
+      color: var(--accent); font-size: 25px; font-weight: 900;
+      border: 1px solid #286b59;
+    }
+    h1 { margin: 0; font-size: clamp(25px, 6vw, 32px); letter-spacing: -.8px; }
+    .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    .card {
+      background: linear-gradient(160deg, #152338, var(--panel) 70%);
+      border: 1px solid var(--border); border-radius: 22px;
+      padding: 25px; box-shadow: 0 22px 70px #0006;
+    }
+    label { display: block; color: #d7e1ed; font-size: 13px; font-weight: 650; margin-bottom: 9px; }
+    .input-shell {
+      display: flex; align-items: center; gap: 9px; padding: 0 15px;
+      border: 1px solid #3a506a; background: #0d1726; border-radius: 13px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input-shell:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px #55d6a422; }
+    .currency { color: var(--muted); font-size: 22px; }
+    input {
+      min-width: 0; width: 100%; padding: 15px 0; border: 0; outline: 0;
+      color: var(--text); background: transparent; font-size: 25px; font-weight: 700;
+    }
+    input::placeholder { color: #53657b; }
+    .hint { color: var(--muted); font-size: 12px; margin: 9px 1px 21px; }
+    .result {
+      padding: 19px; border-radius: 16px; background: linear-gradient(135deg, #174b40, #153b39);
+      border: 1px solid #286c5a; margin-bottom: 17px;
+    }
+    .result-label { color: #b5e9d5; font-size: 13px; font-weight: 650; }
+    .total { margin-top: 5px; font-size: clamp(35px, 9vw, 43px); line-height: 1.1; font-weight: 850; letter-spacing: -1.3px; }
+    .result-note { color: #b5e9d5; opacity: .8; font-size: 12px; margin-top: 8px; }
+    .breakdown { display: grid; gap: 12px; padding: 5px 2px 17px; }
+    .line { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; }
+    .line strong { color: var(--text); font-variant-numeric: tabular-nums; }
+    .line.fee strong { color: #ffc77a; }
+    .divider { height: 1px; background: var(--border); margin: 1px 0 3px; }
+    .actions { display: flex; gap: 10px; }
+    button {
+      flex: 1; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+      color: var(--text); background: var(--panel-2); font-weight: 700; font-size: 13px;
+      cursor: pointer; transition: transform .12s, background .12s;
+    }
+    button:hover { background: #223650; }
+    button:active { transform: scale(.98); }
+    button.primary { color: #08251d; background: var(--accent); border-color: var(--accent); }
+    button.primary:hover { background: #72e4b8; }
+    .budget {
+      margin-top: 16px; border: 1px solid var(--border); border-radius: 16px;
+      padding: 16px; background: #0e1928;
+    }
+    .budget-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .budget-head strong { font-size: 14px; }
+    .tag { font-size: 10px; color: var(--accent); background: #17382f; padding: 5px 8px; border-radius: 20px; }
+    .budget .input-shell { padding: 0 11px; }
+    .budget input { font-size: 19px; padding: 11px 0; }
+    .budget-answer { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; color: var(--muted); font-size: 13px; }
+    .budget-answer strong { color: var(--accent); font-size: 16px; }
+    footer { text-align: center; color: #71839a; font-size: 11px; margin-top: 18px; line-height: 1.6; }
+    @media (max-width: 420px) { .card { padding: 19px; } .actions { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand">
+      <div class="logo">E</div>
+      <h1>Eldrago Fee Calculator</h1>
+      <p class="subtitle">Know the full price before you buy.</p>
+    </header>
+
+    <section class="card" aria-label="Payment fee calculator">
+      <label for="price">Item price</label>
+      <div class="input-shell">
+        <span class="currency">$</span>
+        <input id="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="10.00">
+      </div>
+      <p class="hint">Enter the listed price of the item on Eldrago.</p>
+
+      <div class="result" aria-live="polite">
+        <div class="result-label">TOTAL YOU PAY</div>
+        <div class="total" id="total">$11.10</div>
+        <div class="result-note">Item price + 8% payment fee + $0.30</div>
+      </div>
+
+      <div class="breakdown">
+        <div class="line"><span>Item price</span><strong id="itemAmount">$10.00</strong></div>
+        <div class="line fee"><span>8% payment fee</span><strong id="percentFee">$0.80</strong></div>
+        <div class="line fee"><span>Fixed fee</span><strong id="fixedFee">$0.30</strong></div>
+        <div class="divider"></div>
+        <div class="line"><span>Total fees</span><strong id="fees">$1.10</strong></div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="copyBtn" type="button">Copy total</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+
+      <div class="budget">
+        <div class="budget-head">
+          <strong>Working with a budget?</strong>
+          <span class="tag">REVERSE CALCULATOR</span>
+        </div>
+        <label for="budget">Your maximum total</label>
+        <div class="input-shell">
+          <span class="currency">$</span>
+          <input id="budget" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+        </div>
+        <div class="budget-answer">
+          <span>Max item price before fees</span>
+          <strong id="maxPrice">$0.00</strong>
+        </div>
+      </div>
+    </section>
+    <footer>Estimate uses the fee you provided: 8% + $0.30.<br>Final charges may differ if Eldrago applies other fees or rounding.</footer>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const money = (value) => new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD'
+    }).format(Number.isFinite(value) ? value : 0);
+
+    function calculate() {
+      const raw = Number.parseFloat($('price').value);
+      const item = Number.isFinite(raw) && raw > 0 ? raw : 0;
+      const percentFee = item * 0.08;
+      const fixedFee = item > 0 ? 0.30 : 0;
+      const fees = percentFee + fixedFee;
+      const total = item + fees;
+
+      $('itemAmount').textContent = money(item);
+      $('percentFee').textContent = money(percentFee);
+      $('fixedFee').textContent = money(fixedFee);
+      $('fees').textContent = money(fees);
+      $('total').textContent = money(total);
+    }
+
+    function calculateBudget() {
+      const raw = Number.parseFloat($('budget').value);
+      const budget = Number.isFinite(raw) && raw > 0 ? raw : 0;
+      const max = budget > 0.30 ? (budget - 0.30) / 1.08 : 0;
+      $('maxPrice').textContent = money(Math.floor(max * 100) / 100);
+    }
+
+    $('price').addEventListener('input', calculate);
+    $('budget').addEventListener('input', calculateBudget);
+    $('resetBtn').addEventListener('click', () => {
+      $('price').value = '';
+      $('budget').value = '';
+      calculate();
+      calculateBudget();
+      $('price').focus();
+    });
+    $('copyBtn').addEventListener('click', async () => {
+      const text = $('total').textContent;
+      const btn = $('copyBtn');
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy total', 1400);
+      } catch {
+        btn.textContent = text;
+      }
+    });
+    calculate();
+    calculateBudget();
+  </script>
+</body>
+</html>
